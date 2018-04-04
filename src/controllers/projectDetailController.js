@@ -65,6 +65,7 @@ const getProjects = (req, res) => {
     inner join project_detail pd on p.project_det_id = pd.project_det_id 
     inner join project_type pt on pd.project_type_id = pt.project_type_id
     where 1=1 
+    order by p.project_id 
   `;
   const datas = [
     { key: "pd.project_number", value: req.query.project_number },
