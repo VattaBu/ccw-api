@@ -1,5 +1,32 @@
 const db = require("../configs/db");
 
+const getProjectInYear = (req, res) => {
+  const paramsBinding = [req.params.year];
+  let querySQL = `
+    select count(p.project_id) as projectNum  
+    from project p
+    inner join project_detail pd on p.project_det_id = pd.project_det_id 
+    inner join project_type pt on pd.project_type_id = pt.project_type_id
+    inner join revenue r on p.revenue_id = r.revenue_id
+    inner join revenue_detail rd on r.revenue_id = rd.revenue_id
+    where SUBSTRING(rd.withdraw_date,1,4) = ? and rd.status = 'RECEIVE' ; 
+  `
+
+  try {
+    // get users by query string
+    return db.query(querySQL, paramsBinding, (error, results) => {
+      console.log(error);
+
+      if (error) res.sendStatus(500);
+
+      return res.send(results[0]);
+    });
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
 const getProjectByID = (req, res) => {
   const paramsBinding = [req.params.project_id];
   let querySQL = `
@@ -243,6 +270,12 @@ const updateProject = (req, res) => {
     WHERE project_det_id= ? ;
   `;
 
+  const updateRevenueDetail = `
+    UPDATE ccw.revenue_detail 
+    SET price= ? 
+    WHERE revenue_id = ?
+  `;
+
   const paramsBindingProjectDetail = [
     req.body.project_number,
     req.body.project_name,
@@ -289,6 +322,13 @@ const updateProject = (req, res) => {
                   return connection.rollback(() => {
                     res.sendStatus(500);
                   });
+                
+                // TODO
+                console.log('update')
+                console.log(req.params.revenue)
+                console.log(typeof req.params.revenue)
+                console.log('update')
+                  
                 // update project
                 connection.commit(error => {
                   console.log("err 4", error);
@@ -504,6 +544,7 @@ const deleteProject = (req, res) => {
 const countProjectInMount = (req, res) => {};
 
 module.exports = {
+  getProjectInYear,
   getProjectByID,
   getProjects,
   createProject,

@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const {
   getProjectByID,
+  getProjectInYear,
   getProjects,
   createProject,
   updateProject,
@@ -9,6 +10,7 @@ const {
 const router = new Router();
 
 router.route('/projects').get(getProjects);
+router.route('/projects-in-year/:year').get(getProjectInYear);
 router.route('/project/:project_id').get(getProjectByID);
 router.route('/project').post(createProject);
 router.route('/project/:project_id').put(updateProject);
