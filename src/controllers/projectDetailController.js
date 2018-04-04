@@ -270,12 +270,6 @@ const updateProject = (req, res) => {
     WHERE project_det_id= ? ;
   `;
 
-  const updateRevenueDetail = `
-    UPDATE ccw.revenue_detail 
-    SET price= ? 
-    WHERE revenue_id = ?
-  `;
-
   const paramsBindingProjectDetail = [
     req.body.project_number,
     req.body.project_name,
@@ -316,7 +310,7 @@ const updateProject = (req, res) => {
             connection.query(
               queryUpdateProject,
               [req.body.edit_by, Number(req.params.project_id)],
-              error => {
+              async (error) => {
                 console.log("err 4", error);
                 if (error)
                   return connection.rollback(() => {
@@ -325,10 +319,17 @@ const updateProject = (req, res) => {
                 
                 // TODO
                 console.log('update')
-                console.log(req.params.revenue)
-                console.log(typeof req.params.revenue)
+                console.log(req.body.revenue)
+                console.log(typeof req.body.revenue)
                 console.log('update')
+
+                if (req.body.revenue && req.body.revenue.length !== 0) {
+                  for (let i = 0; i < req.body.revenue.length; i++) {
+                    const price = (req.body.revenue[i].price_per * req.body.project_value) / 100;
+                    await updateRevenuePrice(price, req.body.revenue[i].revenue_det_id, connection);
+                  }
                   
+                }
                 // update project
                 connection.commit(error => {
                   console.log("err 4", error);
@@ -351,6 +352,31 @@ const updateProject = (req, res) => {
     // return res.sendStatus(500);
   }
 };
+
+const updateRevenuePrice = (price, id, connection) => new Promise((resolve, reject) => {
+  const paramsBinding = [price , id];
+  const querySQL = `
+    UPDATE ccw.revenue_detail 
+    SET price= ? 
+    WHERE revenue_det_id = ?
+  `;
+
+
+  try {
+    // get users by query string
+    connection.query(querySQL, paramsBinding, (error, results) => {
+      if (error) {
+        console.log('error ==> ', error);
+        reject(error);
+      } else {
+        resolve();
+      }
+   });
+  } catch (error) {
+    console.log('error ==> ', error);
+    reject(error);
+  }
+});
 
 const deleteProject = (req, res) => {
   const queryDeleteRevenueDetail = `
